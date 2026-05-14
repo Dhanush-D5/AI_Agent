@@ -7,7 +7,7 @@ async def generate_voice(text):
 
     communicate = edge_tts.Communicate(
     text,
-    voice="en-US-GuyNeural",
+    voice="en-US-JennyNeural",
     rate="+35%"
     )
 

@@ -1,14 +1,32 @@
 from voice.listen import listen
 from voice.speak import speak
 
-from brain.ai import ask_ai
+from brain.ai import (
+    ask_ai,
+    extract_memory
+)
 
 from commands.tools import (
     open_app,
     open_website
 )
 
+from commands.automation import (
+    type_text,
+    press_key,
+    take_screenshot
+)
+
+from memory.memory import (
+    load_memory,
+    add_memory
+)
+
+
 def main():
+
+    # Load persistent memory
+    memory = load_memory()
 
     speak("Hello. I am Jarvis.")
 
@@ -19,38 +37,103 @@ def main():
         if not user_input:
             continue
 
+        # Exit
         if "exit" in user_input:
             speak("Goodbye")
             break
 
-        result = ask_ai(user_input)
+        # =========================
+        # MEMORY EXTRACTION
+        # =========================
 
-        action = result.get("action")
+        important_memory = extract_memory(
+            user_input
+        )
 
-        # OPEN APP
-        if action == "open_app":
+        if important_memory != "NONE":
 
-            target = result.get("target")
+            add_memory(
+                memory,
+                important_memory
+            )
 
-            response = open_app(target)
+            print("\nMEMORY SAVED:")
+            print(important_memory)
 
-            speak(response)
+        # =========================
+        # AI RESPONSE
+        # =========================
 
-        # OPEN WEBSITE
-        elif action == "open_website":
+        result = ask_ai(
+            user_input,
+            memory
+        )
 
-            target = result.get("target")
+        tool_needed = result.get(
+            "tool_needed"
+        )
 
-            response = open_website(target)
+        # =========================
+        # TOOL EXECUTION
+        # =========================
 
-            speak(response)
+        if tool_needed:
 
-        # NORMAL CHAT
+            action = result.get("action")
+
+            # OPEN APP
+            if action == "open_app":
+
+                response = open_app(
+                    result.get("target")
+                )
+
+            # OPEN WEBSITE
+            elif action == "open_website":
+
+                response = open_website(
+                    result.get("target")
+                )
+
+            # TYPE TEXT
+            elif action == "type_text":
+
+                response = type_text(
+                    result.get("target")
+                )
+
+            # PRESS KEY
+            elif action == "press_key":
+
+                response = press_key(
+                    result.get("target")
+                )
+
+            # SCREENSHOT
+            elif action == "take_screenshot":
+
+                response = take_screenshot()
+
+            else:
+
+                response = (
+                    "I don't know how "
+                    "to do that yet."
+                )
+
+        # =========================
+        # NORMAL CONVERSATION
+        # =========================
+
         else:
 
-            response = result.get("response")
+            response = result.get(
+                "response"
+            )
 
-            speak(response)
+        # Speak response
+        speak(response)
+
 
 if __name__ == "__main__":
     main()
