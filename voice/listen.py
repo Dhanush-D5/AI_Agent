@@ -10,22 +10,32 @@ def listen():
 
         recognizer.adjust_for_ambient_noise(source)
 
-        audio = recognizer.listen(
-            source,
-            timeout=5,
-            phrase_time_limit=10
-        )
+        try:
 
-    try:
-        text = recognizer.recognize_google(audio)
+            audio = recognizer.listen(
+                source,
+                timeout=5,
+                phrase_time_limit=10
+            )
 
-        print(f"\nYou: {text}\n")
+            text = recognizer.recognize_google(audio)
 
-        return text.lower()
+            print(f"\nYou: {text}\n")
 
-    except sr.UnknownValueError:
-        return ""
+            return text.lower()
 
-    except Exception as e:
-        print(e)
-        return ""
+        except sr.WaitTimeoutError:
+
+            # No speech detected
+            return ""
+
+        except sr.UnknownValueError:
+
+            # Could not understand speech
+            return ""
+
+        except Exception as e:
+
+            print("Speech Error:", e)
+
+            return ""

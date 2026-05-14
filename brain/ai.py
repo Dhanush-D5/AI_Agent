@@ -1,6 +1,7 @@
 from groq import Groq
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -8,31 +9,52 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-# Conversation memory
-chat_history = []
-
 def ask_ai(user_input):
 
-    # Save user message
-    chat_history.append(f"User: {user_input}")
+    prompt = prompt = f"""
+You are Jarvis, an intelligent futuristic AI assistant.
 
-    # Limit memory size
-    if len(chat_history) > 10:
-        chat_history.pop(0)
+RULES:
 
-    conversation = "\n".join(chat_history)
+1. If the user wants you to perform an action
+like:
+- opening apps
+- opening websites
+- controlling the computer
 
-    prompt = f"""
-    You are Jarvis, a futuristic AI assistant.
+THEN return JSON.
 
-    Speak naturally and conversationally.
+2. If the user is simply talking,
+asking questions,
+or having a conversation,
 
-    Conversation:
-    {conversation}
+respond naturally like ChatGPT.
 
-    Jarvis:
-    """
+Examples:
 
+User: Open YouTube
+{{
+    "tool_needed": true,
+    "action": "open_website",
+    "target": "youtube"
+}}
+
+User: Open calculator
+{{
+    "tool_needed": true,
+    "action": "open_app",
+    "target": "calculator"
+}}
+
+User: Explain machine learning
+Machine learning is a field of AI where...
+
+User: Tell me a joke
+Why did the programmer quit his job?
+
+User: {user_input}
+"""
+    
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
@@ -43,9 +65,19 @@ def ask_ai(user_input):
         ]
     )
 
-    reply = response.choices[0].message.content
+    text = response.choices[0].message.content.strip()
 
-    # Save Jarvis reply
-    chat_history.append(f"Jarvis: {reply}")
+    # Try parsing JSON
+    try:
 
-    return reply
+        cleaned = text.replace("```json", "").replace("```", "").strip()
+
+        return json.loads(cleaned)
+
+    except:
+
+        # Normal chat fallback
+        return {
+            "tool_needed": False,
+            "response": text
+        }

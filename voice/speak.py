@@ -6,8 +6,9 @@ import os
 async def generate_voice(text):
 
     communicate = edge_tts.Communicate(
-        text,
-        voice="en-US-GuyNeural"
+    text,
+    voice="en-US-GuyNeural",
+    rate="+35%"
     )
 
     await communicate.save("voice.mp3")
