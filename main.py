@@ -1,5 +1,6 @@
 from voice.listen import listen
 from voice.speak import speak
+from brain.vision import analyze_image
 
 from brain.ai import (
     ask_ai,
@@ -113,6 +114,14 @@ def main():
             elif action == "take_screenshot":
 
                 response = take_screenshot()
+            
+            elif action == "analyze_screen":
+
+                take_screenshot()
+
+                response = analyze_image(
+                    "screenshot.png"
+                )
 
             else:
 

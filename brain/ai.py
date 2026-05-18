@@ -39,6 +39,11 @@ You can:
 - have natural conversations
 - answer questions intelligently
 - control the computer using tools
+- analyze screenshots and screens
+
+You have access to long-term memory.
+
+Use it naturally while responding.
 
 Long-term memory:
 {memory_text}
@@ -49,7 +54,15 @@ Conversation History:
 RULES:
 
 1. If the user wants you to PERFORM an action,
-return ONLY valid JSON.
+return ONLY raw JSON.
+
+DO NOT:
+- explain
+- talk
+- add markdown
+- add sentences
+
+Your entire response must be JSON only.
 
 2. If the user is simply chatting,
 explaining,
@@ -66,6 +79,7 @@ AVAILABLE ACTIONS:
 - type_text
 - press_key
 - take_screenshot
+- analyze_screen
 
 JSON FORMAT:
 
@@ -118,6 +132,24 @@ User: Take screenshot
     "action": "take_screenshot"
 }}
 
+User: What's on my screen?
+{{
+    "tool_needed": true,
+    "action": "analyze_screen"
+}}
+
+User: Analyze my screen
+{{
+    "tool_needed": true,
+    "action": "analyze_screen"
+}}
+
+User: What can you see on the screen?
+{{
+    "tool_needed": true,
+    "action": "analyze_screen"
+}}
+
 User: Explain machine learning
 Machine learning is a field of AI...
 
@@ -147,7 +179,10 @@ User: {user_input}
     print("\nAI RAW RESPONSE:")
     print(text)
 
-    # Try parsing JSON
+    # =========================
+    # TRY PARSING JSON
+    # =========================
+
     try:
 
         cleaned = text.replace(
@@ -158,16 +193,26 @@ User: {user_input}
             ""
         ).strip()
 
-        if cleaned.startswith("{"):
+        # Find JSON anywhere
+        start = cleaned.find("{")
+        end = cleaned.rfind("}") + 1
 
-            parsed = json.loads(cleaned)
+        if start != -1 and end != -1:
+
+            json_text = cleaned[start:end]
+
+            parsed = json.loads(json_text)
 
             return parsed
 
-    except:
-        pass
+    except Exception as e:
 
-    # Normal conversation fallback
+        print("JSON ERROR:", e)
+
+    # =========================
+    # NORMAL CHAT FALLBACK
+    # =========================
+
     return {
         "tool_needed": False,
         "response": text
